@@ -24,7 +24,7 @@ def callback(data):
     "longitude": res["longitude"]
     }
     results = db.child("locationCar").update(data)
-    # print(results)
+    print(results)
 
 
 def listener():
