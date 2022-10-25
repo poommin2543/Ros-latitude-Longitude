@@ -5,7 +5,7 @@ from std_msgs.msg import String
 from sensor_msgs.msg import NavSatFix
 import ast
 import time
-import pyrebase
+from firebase import Firebase
 
 config = {
   "apiKey": "AIzaSyB9RkZFAwtJfZUXYvXZBb2S4GYVSzOkpjEv",
@@ -14,7 +14,7 @@ config = {
   "storageBucket": "location-a26be.appspot.com"
 }
 
-firebase = pyrebase.initialize_app(config)
+firebase = Firebase(config)
 
 db = firebase.database()
 location_info = ""
@@ -43,37 +43,31 @@ class publishGPS(object):
 	# print(location_info)
 
 	def do_work(self):
-		time.sleep(5)
+		# time.sleep(5)
 		# self.splitStrings= str(self.lastMsg).split(",")
-		db.stream(self.stream_handler)
-		# print(f'location_info : {type(location_info)}')
-        
-		# print(location_info['latitude'])
-		if location_info == "":
-			pass
-		else:
-			location_sp = (location_info.split(","))
-			latitude = float((location_sp[0].split(":"))[1])
-			longitude = float(((location_sp[1].split(":"))[1]).split("}")[0])
-			print(latitude,longitude)
-			# print((((location_sp[0].split(":")[1])).split("'"))[1])
-			# print((((location_sp[1].split(":")[1])).split("'"))[1])
-			# location_info_dict = json.loads(location_info_str)
-		# print(location_info_dict['latitude'])
-		# if location_info == {}:
-		# 	pass
-		# else:
-		# 	print(location_info_dict['latitude'])
-			gpsmsg=NavSatFix()
-			gpsmsg.header.stamp = rospy.Time.now()
-			gpsmsg.header.frame_id = "gps"
-			# rospy.loginfo(self.splitStrings[1])
-			rospy.loginfo("Hi!!!")
-			# gpsmsg.latitude=float(1.1111)
-			# gpsmsg.longitude=float(2.25555)
-			gpsmsg.latitude=float(latitude)
-			gpsmsg.longitude=float(longitude)
-			self.gps_pub.publish(gpsmsg)
+		# db.stream(self.stream_handler)
+		users = db.child("location").get()
+		data = users.val()
+		print(data.items())
+		for key, value in data.items():
+			# print(key, value)
+			if key == "latitude":
+				latitude = float(value)
+			if key == "longitude":
+				longitude = float(value)
+	
+		print(latitude,longitude)
+		
+		gpsmsg=NavSatFix()
+		gpsmsg.header.stamp = rospy.Time.now()
+		gpsmsg.header.frame_id = "gps"
+		# rospy.loginfo(self.splitStrings[1])
+		rospy.loginfo("Hi!!!")
+		# gpsmsg.latitude=float(1.1111)
+		# gpsmsg.longitude=float(2.25555)
+		gpsmsg.latitude=float(latitude)
+		gpsmsg.longitude=float(longitude)
+		self.gps_pub.publish(gpsmsg)
 
 	def run(self):
 		r=rospy.Rate(1)
